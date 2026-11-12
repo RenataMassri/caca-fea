@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#63dcd5">
+<title>La Caca Fea y el Gran Inodoro — v5</title>
+<style>
+:root{--bg:#78e6df;--panel:#f7f0df;--light:#3e2e2a;--muted:#6e6f77;--gold:#ffd76f;--mint:#7ae0be;--pink:#ff8db8;--tile:#bdf3ef;--tile2:#e8fffd;--wall:#8ad9ef;--wallDark:#57b4cf}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#b6fffb,#78e6df 46%,#56cfd5);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--light);display:flex;align-items:center;justify-content:center;padding:15px}.shell{width:min(100%,760px)}header{text-align:center;padding:5px 0 14px}h1{font-size:clamp(25px,5vw,38px);margin:0;text-shadow:0 4px 0 #fff3cf}header p{margin:7px 0 0;color:#5a6470;font-size:14px}.game-card{background:linear-gradient(165deg,#fffaf0,#efe3cf);border:3px solid #7dd8e7;border-radius:24px;padding:15px;box-shadow:0 16px 40px #3bb9c14a}.hud{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}.chip{border:1px solid #87d7e7;background:#fffdf8;border-radius:14px;padding:9px 12px;font-weight:800;font-size:14px;color:#5d463b}.chip span{color:#cf6d1d}#game{width:100%;display:block;aspect-ratio:1.12;background:#ddfffd;border-radius:15px;border:3px solid #72cee2;touch-action:none;image-rendering:auto}.message{min-height:43px;text-align:center;font-weight:700;color:#aa5c18;padding:12px 4px 3px;font-size:15px}.toolbar{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:9px}button{border:0;cursor:pointer;font:800 15px system-ui;border-radius:14px;padding:11px 16px;background:#ffd76f;color:#624521;box-shadow:0 4px 0 #d79a2e;touch-action:manipulation}button:active{transform:translateY(3px);box-shadow:0 1px 0 #d79a2e}button.secondary{background:#ffb9d1;box-shadow:0 4px 0 #d9789f;color:#5f2d43}button:focus-visible{outline:3px solid white;outline-offset:3px}.bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.help{color:#67564a;font-size:13px;line-height:1.5}.pad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,49px);gap:6px;flex:none}.pad button{padding:0;background:#8be8de;box-shadow:0 3px 0 #3cb2ab;font-size:22px;border-radius:12px;color:#20484a}.pad .up{grid-column:2}.pad .left{grid-row:2;grid-column:1}.pad .down{grid-row:2;grid-column:2}.pad .right{grid-row:2;grid-column:3}.overlay{position:fixed;inset:0;background:#47c8c2c7;display:flex;align-items:center;justify-content:center;padding:20px;z-index:3}.overlay[hidden]{display:none}.dialog{width:min(100%,420px);border:2px solid #ffd76f;border-radius:24px;background:linear-gradient(150deg,#fffaf1,#e6fbfb);box-shadow:0 25px 70px #2a9e9e52;text-align:center;padding:28px 23px}.dialog .big{font-size:60px}.dialog h2{font-size:26px;margin:8px 0;color:#6d4927}.dialog p{line-height:1.55;color:#5e6871}.dialog button{margin-top:8px}.footer{text-align:center;font-size:12px;color:#4b7f89;margin:15px 0 0}@media(max-width:520px){body{padding:7px}.game-card{padding:9px;border-radius:17px}.chip{font-size:12px;padding:7px 8px}.bottom{flex-direction:column-reverse}.help{text-align:center}.pad{grid-template-columns:repeat(3,62px);grid-template-rows:repeat(2,49px)}header{padding:6px 0 10px}}
+/* Controles táctiles: evitar selección de caracteres y menú Copiar/Cortar/Pegar. */
+.game-card, .overlay, .pad button, #attack, #game {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Las pulsaciones largas en las flechas son para moverse, no para gestos del navegador. */
+.pad, .pad button, #attack { touch-action: none; }
+</style>
+</head>
+<body>
+<main class="shell">
+<header><h1>💩 La Caca Fea contra los Jefes del Papel 🚽</h1><p>Cuatro laberintos, jefes malvados ¡y música de 8 bits!</p></header>
+<section class="game-card" aria-label="Juego de aventuras y laberintos">
+<div class="hud"><div class="chip">🗺️ Nivel <span id="level">1</span></div><div class="chip">🧼 <span id="gems">0/0</span></div><div class="chip">🕶️ <span id="key">No</span></div><div class="chip">✨ <span id="pretty">No</span></div><div class="chip">❤️ <span id="hearts">♥♥♥</span></div><div class="chip">👑 <span id="bossHud">Dormido</span></div></div>
+<canvas id="game" width="672" height="600" aria-label="Laberinto del juego"></canvas>
+<div class="message" id="message" aria-live="polite">¡Buscá los jabones para empezar a limpiarte!</div>
+<div class="toolbar"><button id="restart" class="secondary">↻ Reiniciar nivel</button><button id="music" class="secondary" aria-pressed="true">🎵 Música: sí</button><button id="sound" class="secondary" aria-pressed="true">🔊 Efectos: sí</button><button id="attack">🫧 ¡Disparar jabón!</button></div>
+<div class="bottom"><div class="help">Movete con las <strong>flechas</strong> o <strong>WASD</strong>.<br>En celular, usá los botones. Juntá jabones 🧼, ponete anteojos 🕶️, mirate al espejo 🪞 y llegá al inodoro 🚽. ¡Esquivá los papeles higiénicos! La casilla amarilla ⚠️ JEFE indica dónde aparecerá el jefe después del espejo. ¡Hay que derrotarlo antes de entrar al inodoro! Dispará jabón con ESPACIO o 🫧. La música cambia al aparecer el jefe.</div><div class="pad" aria-label="Controles táctiles"><button class="up" data-dir="up" aria-label="Arriba">↑</button><button class="left" data-dir="left" aria-label="Izquierda">←</button><button class="down" data-dir="down" aria-label="Abajo">↓</button><button class="right" data-dir="right" aria-label="Derecha">→</button></div></div>
+</section><p class="footer">Una historia de higiene, glamour y papel higiénico rebelde 💩</p>
+</main>
+<div class="overlay" id="overlay"><div class="dialog"><div class="big" id="overlayIcon">💩</div><h2 id="overlayTitle">¡Comienza la aventura más mugrienta!</h2><p id="overlayText">Sos Caca Fea, una caca muy desprolija. ¡Juntá todos los jabones, conseguí anteojos negros, mirate al espejo para ponerte linda y corré al inodoro! Los rollos de papel higiénico quieren atraparte. La marca amarilla ⚠️ JEFE señala dónde aparecerá el jefe, bien lejos del espejo. Para pasar de nivel, primero tenés que derrotarlo con ESPACIO o con el botón 🫧 y después llegar al inodoro. ¡Al tocar «¡A jugar!» empieza la música de 8 bits!</p><button id="overlayButton">¡A jugar!</button></div></div>
+<script>
+(()=>{'use strict';
+const cv=document.getElementById('game'),ctx=cv.getContext('2d');const $=id=>document.getElementById(id);
+const LEVELS=[
+["###############","#P........G...#","#.##.#.#.###..#","#..#...#...#..#","##.#####.#.#.##","#..G....#.#...#","#.#####.#.###.#","#.....#.#...#.#","#.###.#.###.#.#","#...#...M...#.#","###.#######.#B#","#K..#...G...#E#","###############"],
+["###############","#P..#....G....#","#.#.#.#####.#.#","#.#...#...#.#.#","#.#####.#.#.#.#","#...G...#...#.#","###.#####.###.#","#...#...M.....#","#.#.#.#######.#","#.#...#...G...#","#.#####.#####.#","#K......M...BE#","###############"],
+["###############","#P....#.......#","###.#.#.#####.#","#G..#.#...#...#","#.###.###.#.###","#...#.....#...#","#.#.#####.###.#","#.#...G...#...#","#.#######.#.#.#","#...M.....#.#.#","###.#####.#.#.#","#K..#...G.M.BE#","###############"],
+["###############","#P..#..G......#","#.#.#.#####.###","#.#...#...#...#","#.#####.#.###.#","#.....#.#...#.#","#.###.#.###.#.#","#G#...#...#.#.#","#.#.#####.#.#.#","#...M...#...#.#","#.#####.#####.#","#K....M...G.BE#","###############"]
+];
+const BOSS_NAMES=["Don Rollo Maloliente","La Momia de Doble Hoja","Capitán Papelón","El Rey del Papel Higiénico"];
+// Velocidad del jefe en milisegundos: 350 - k * nivel (nivel = 1, 2, 3, 4).
+// Cambiá k para ajustar cuánto se acelera entre niveles.
+const BOSS_BASE_DELAY=350;
+const k=30;
+let bossTimer=null;
+function bossDelay(level){return Math.max(140, BOSS_BASE_DELAY-k*level)}
+function restartBossTimer(){clearInterval(bossTimer);bossTimer=setInterval(bossStep,bossDelay(stage+1))}
+let boss=null,facing=[1,0],lastShot=-Infinity,shots=[],hitEffects=[],bossTick=0;
+let stage=0,grid=[],player={x:1,y:1},exit={x:13,y:11},keyPos=null,mirrorPos=null,bossSpawn=null,gems=[],monsters=[],hasKey=false,pretty=false,hearts=3,locked=false,soundOn=true,musicOn=true,lastMove=0,invincibleUntil=0,animation=0,audio=null,completed=false;
+const icons={wall:'#89d9ee',floor:'#c9fffb'};
+// Banda sonora original de 8 bits: no necesita archivos ni conexión a internet.
+// El navegador móvil permite iniciar audio después de tocar «¡A jugar!».
+let musicBus=null,musicTimer=null,musicMode='explore',musicStep=0,nextNoteTime=0;
+function getAudio(){
+ try{
+  if(!audio){
+   const AudioClass=window.AudioContext||window.webkitAudioContext;
+   if(!AudioClass)return null;
+   audio=new AudioClass();
+   musicBus=audio.createGain();musicBus.gain.value=0;
+   musicBus.connect(audio.destination);
+  }
+  if(audio.state==='suspended')audio.resume().catch(()=>{});
+  return audio;
+ }catch(e){return null}
+}
+function beep(freq=520,dur=.1,type='sine'){
+ if(!soundOn)return;
+ try{const a=getAudio();if(!a)return;
+  const osc=a.createOscillator(),gain=a.createGain(),now=a.currentTime;
+  osc.type=type;osc.frequency.setValueAtTime(freq,now);
+  gain.gain.setValueAtTime(.065,now);gain.gain.exponentialRampToValueAtTime(.001,now+dur);
+  osc.connect(gain).connect(a.destination);osc.start(now);osc.stop(now+dur);
+ }catch(e){}
+}
+// Números MIDI; null indica un silencio. Melodías compuestas para este juego.
+// Cada paso es una corchea. El jefe tiene su propio ritmo y melodía.
+const TRACKS={
+ explore:{bpm:114,
+  lead:[72,null,76,79,76,null,74,null,72,74,76,null,79,76,74,null,69,null,72,76,74,null,72,null,71,74,76,79,76,74,72,null],
+  bass:[48,null,null,null,55,null,null,null,53,null,null,null,55,null,null,null,45,null,null,null,52,null,null,null,50,null,null,null,55,null,null,null]},
+ boss:{bpm:150,
+  lead:[72,72,75,null,79,75,72,null,70,70,74,77,74,null,70,null,72,75,79,82,79,75,72,null,77,77,79,77,75,72,70,null],
+  bass:[36,null,36,null,43,null,36,null,34,null,34,null,41,null,34,null,36,null,43,null,39,null,43,null,41,null,41,null,43,null,41,null]}
+};
+function tone(midi,when,duration,wave,volume,destination){
+ if(midi===null||!audio)return;
+ const osc=audio.createOscillator(),gain=audio.createGain();
+ osc.type=wave;
+ osc.frequency.setValueAtTime(440*Math.pow(2,(midi-69)/12),when);
+ gain.gain.setValueAtTime(.001,when);
+ gain.gain.exponentialRampToValueAtTime(volume,when+.009);
+ gain.gain.setValueAtTime(volume*.64,when+duration*.6);
+ gain.gain.exponentialRampToValueAtTime(.001,when+duration);
+ osc.connect(gain).connect(destination);
+ osc.start(when);osc.stop(when+duration+.02);
+}
+function stopMusic(){
+ if(musicTimer!==null){clearInterval(musicTimer);musicTimer=null;}
+ if(audio&&musicBus){const t=audio.currentTime;
+  musicBus.gain.cancelScheduledValues(t);
+  musicBus.gain.setTargetAtTime(0,t,.018);
+ }
+}
+function scheduleMusic(){
+ if(!audio||audio.state!=='running'||!musicOn||!musicTimer)return;
+ const track=TRACKS[musicMode],bpm=track.bpm+stage*(musicMode==='boss'?9:3);
+ const stepSeconds=30/bpm;
+ if(nextNoteTime<audio.currentTime-.2)nextNoteTime=audio.currentTime+.05;
+ while(nextNoteTime<audio.currentTime+.14){
+  const i=musicStep%track.lead.length;
+  tone(track.lead[i],nextNoteTime,stepSeconds*.82,'square',.033,musicBus);
+  tone(track.bass[i],nextNoteTime,stepSeconds*1.7,'triangle',.067,musicBus);
+  // Pequeño contratiempo, como una percusión electrónica retro.
+  if(i%4===2)tone(84,nextNoteTime,.03,'triangle',.009,musicBus);
+  nextNoteTime+=stepSeconds;musicStep++;
+ }
+}
+function startMusic(){
+ if(!musicOn||!$('overlay').hidden||locked||completed||document.hidden)return;
+ const a=getAudio();if(!a||!musicBus)return;
+ if(musicTimer!==null)return;
+ const t=a.currentTime;musicBus.gain.cancelScheduledValues(t);
+ musicBus.gain.setTargetAtTime(.44,t,.035);
+ nextNoteTime=t+.06;musicStep=0;
+ musicTimer=setInterval(scheduleMusic,60);scheduleMusic();
+}
+function syncMusic(mode){
+ if(mode!==musicMode){stopMusic();musicMode=mode;}
+ if(musicOn)startMusic();
+}
+function victoryTune(){
+ if(!musicOn)return;
+ const a=getAudio();if(!a)return;
+ // Fanfarria breve de triunfo, separada de la música de fondo.
+ const notes=[72,76,79,84,79,84];const t=a.currentTime+.04;
+ notes.forEach((n,i)=>tone(n,t+i*.135,i===notes.length-1?.42:.12,'triangle',.065,a.destination));
+}
+
+const same=(a,b)=>a.x===b.x&&a.y===b.y;const floor=(x,y)=>grid[y]?.[x]&&grid[y][x]!=='#';
+// El punto de aparición se elige al comenzar cada nivel: lo más lejos posible
+// del espejo siguiendo los pasillos (no por distancia en línea recta).
+// Queda fijo y marcado para que se pueda anticipar dónde saldrá el jefe.
+function chooseBossSpawn(){
+ const start=mirrorPos||player;
+ const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ const queue=[{x:start.x,y:start.y,d:0}],seen=new Set([start.x+','+start.y]);
+ let farthest=null;
+ for(let i=0;i<queue.length;i++){
+  const p=queue[i];
+  const available=!(same(p,player)||same(p,exit)||same(p,start)||
+    (keyPos&&same(p,keyPos))||gems.some(g=>same(p,g))||monsters.some(m=>same(p,m)));
+  if(available&&(!farthest||p.d>farthest.d)) farthest=p;
+  for(const [dx,dy] of dirs){
+   const x=p.x+dx,y=p.y+dy,key=x+','+y;
+   if(floor(x,y)&&!seen.has(key)){
+    seen.add(key);queue.push({x,y,d:p.d+1});
+   }
+  }
+ }
+ return farthest?{x:farthest.x,y:farthest.y}:{x:exit.x,y:exit.y};
+}
+function load(i){stage=i;restartBossTimer();grid=LEVELS[i%LEVELS.length].map(row=>row.split(''));gems=[];monsters=[];hasKey=false;pretty=false;boss=null;shots=[];hitEffects=[];bossTick=0;facing=[1,0];lastShot=-Infinity;mirrorPos=null;bossSpawn=null;hearts=3;locked=false;completed=false;invincibleUntil=0;for(let y=0;y<grid.length;y++)for(let x=0;x<grid[y].length;x++){const c=grid[y][x];if(c==='P')player={x,y};if(c==='E')exit={x,y};if(c==='K')keyPos={x,y};if(c==='B')mirrorPos={x,y};if(c==='G')gems.push({x,y});if(c==='M')monsters.push({x,y,homeX:x,homeY:y,previous:null});if(c!=='#')grid[y][x]='.'}bossSpawn=chooseBossSpawn();update();announce('¡Nivel '+(stage+1)+'! Juntá los jabones. La marca ⚠️ JEFE indica dónde aparecerá el jefe al mirarte en el espejo.');syncMusic('explore');}
+function update(){ $('level').textContent=stage+1; $('gems').textContent=(totalGems()-gems.length)+'/'+totalGems();$('key').textContent=hasKey?'¡Sí!':'No';$('pretty').textContent=pretty?'¡Fachera!':'No';$('hearts').textContent='♥'.repeat(hearts)+'♡'.repeat(3-hearts);$('bossHud').textContent=boss?(boss.hp>0?boss.name+' '+('💜'.repeat(boss.hp)):'¡Vencido!'):(pretty?'¡Vencido!':'Dormido')}
+function totalGems(){return LEVELS[stage%LEVELS.length].join('').split('G').length-1}
+function announce(str){$('message').textContent=str}
+function panel(icon,title,description,button,fn){$('overlayIcon').textContent=icon;$('overlayTitle').textContent=title;$('overlayText').textContent=description;$('overlayButton').textContent=button;$('overlay').hidden=false;stopMusic();$('overlayButton').onclick=()=>{ $('overlay').hidden=true;fn?.();syncMusic('explore') }}
+function move(dx,dy){if(!$('overlay').hidden||locked||completed)return;const now=performance.now();if(now-lastMove<85)return;lastMove=now;const nx=player.x+dx,ny=player.y+dy;if(!floor(nx,ny)){beep(180,.045,'triangle');return;}player={x:nx,y:ny};facing=[dx,dy];beep(290,.035,'sine');const idx=gems.findIndex(g=>same(g,player));if(idx>=0){gems.splice(idx,1);announce(gems.length?'¡Frotá, frotá! Cada jabón ayuda a limpiar la caca.':'¡Rechinando de limpia! Ahora buscá los anteojos oscuros.');beep(740,.12);setTimeout(()=>beep(990,.15),80)}if(keyPos&&same(player,keyPos)){if(gems.length){announce('¡Primero hay que bañarse! Todavía quedan '+gems.length+' jabones.');beep(170,.15,'triangle')}else{hasKey=true;keyPos=null;announce('¡Anteojos oscuros puestos! Ahora buscá el espejo.');beep(660,.18)}}if(mirrorPos&&same(player,mirrorPos)){if(gems.length){announce('¡Todavía estás sucia! Primero juntá los jabones.')}else if(!hasKey){announce('¡Para estar fachera necesitás tus anteojos oscuros!')}else if(!pretty){pretty=true;spawnBoss();announce('¡Qué facha! ¡'+boss.name+' apareció en la marca ⚠️ JEFE, lejos del espejo! ¡Derrotalo con jabón antes de ir al inodoro!');beep(850,.12);setTimeout(()=>beep(1110,.22),100)}}if(same(player,exit)){if(pretty&&!boss){win();return}else if(pretty&&boss){announce('¡Primero derrotá a '+boss.name+' con burbujas de jabón!');beep(160,.2);return}else{announce(gems.length?'¡Al inodoro no! Primero limpiate con todos los jabones.':!hasKey?'¡Todavía faltan los anteojos oscuros!':'¡Antes de ir al inodoro, mirate en el espejo!');beep(150,.2)}}checkMonsters();update()}
+function checkMonsters(){if(performance.now()<invincibleUntil||locked)return;if(monsters.some(m=>same(m,player))||(boss&&same(boss,player))){hearts--;invincibleUntil=performance.now()+1200;beep(140,.3,'sawtooth');update();if(hearts<=0){locked=true;panel('🧻','¡Te envolvieron en papel!','Los rollos de papel higiénico ganaron esta ronda. ¡Pero Caca Fea puede intentarlo otra vez!','Intentar de nuevo',()=>load(stage))}else announce('¡Un papel higiénico te atrapó! Te quedan '+hearts+' corazones.')}}
+function spawnBoss(){
+ const hp=2+stage;boss={x:bossSpawn.x,y:bossSpawn.y,hp,maxHp:hp,name:BOSS_NAMES[stage],flash:0,previous:null};
+ update();beep(110,.4,'sawtooth');syncMusic('boss');
+}
+// Las burbujas viajan de verdad por el laberinto, en vez de comprobar toda
+// la línea en un único instante. Esto permite ver hacia dónde dispara Caca Fea.
+const SHOT_STEP_MS=82;
+const SHOT_RANGE=9;
+function shotTouchesBoss(shot){
+ // Radio de espuma de un casillero para que apuntar en el celular sea más fácil.
+ return boss&&Math.abs(boss.x-shot.x)+Math.abs(boss.y-shot.y)<=1;
+}
+function damageBoss(shot,t){
+ if(!boss)return;
+ const pos={x:boss.x,y:boss.y};
+ boss.hp--;
+ boss.flash=t+450;
+ hitEffects.push({x:pos.x,y:pos.y,started:t,kind:'hit'});
+ beep(260,.20,'square');
+ if(boss.hp<=0){
+  const name=boss.name;
+  boss=null;
+  shots=[];
+  syncMusic('explore');
+  announce('¡Burbujazo directo! ¡DERROTASTE A '+name.toUpperCase()+'! ¡Al inodoro!');
+  beep(990,.23);setTimeout(()=>beep(1200,.26),140);
+ }else announce('¡LE PEGASTE AL JEFE! Le quedan '+boss.hp+' burbujazos.');
+ update();
+}
+function shoot(){
+ if(!$('overlay').hidden||locked||completed)return;
+ if(!pretty){announce('¡Primero tenés que limpiarte, conseguir los anteojos y mirarte al espejo!');return;}
+ if(!boss){announce('¡Jefe vencido! Ahora podés ir al inodoro.');return;}
+ const now=performance.now();if(now-lastShot<430)return;
+ lastShot=now;
+ const [dx,dy]=facing;
+ const shot={x:player.x,y:player.y,dx,dy,steps:0,lastStep:now,dead:false};
+ beep(660,.09,'triangle');
+ // El jefe puede pisar el mismo casillero que la protagonista.
+ if(shotTouchesBoss(shot)){damageBoss(shot,now);return;}
+ shots.push(shot);
+ announce('¡Burbuja lanzada! Viaja hacia donde apunta la flecha.');
+}
+function advanceShots(t){
+ for(const shot of shots){
+  if(shot.dead)continue;
+  // Avanzar aunque un cuadro tarde más de lo habitual.
+  while(!shot.dead&&t-shot.lastStep>=SHOT_STEP_MS){
+   shot.lastStep+=SHOT_STEP_MS;
+   shot.x+=shot.dx;shot.y+=shot.dy;shot.steps++;
+   if(!floor(shot.x,shot.y)){shot.dead=true;break;}
+   if(shotTouchesBoss(shot)){
+    shot.dead=true;
+    damageBoss(shot,t);
+    break;
+   }
+   if(shot.steps>=SHOT_RANGE)shot.dead=true;
+  }
+ }
+ shots=shots.filter(q=>!q.dead);
+}
+function win(){completed=true;stopMusic();victoryTune();beep(880,.22);setTimeout(()=>beep(1175,.3),140);if(stage===LEVELS.length-1){panel('🚽','¡FLUSH! ¡Misión cumplida!','¡Caca Fea se bañó, se puso los anteojos, quedó espectacular y llegó al gran inodoro! ¡Derrotaste a los cuatro jefes del papel y ganaste los cuatro laberintos!','Jugar otra vez',()=>load(0))}else{panel('🚽','¡Al inodoro! ¡FLUSH!','¡La caca más fachera del mundo llegó al inodoro! ¡Venciste al jefe! Pero hay otro baño laberíntico por explorar...','Siguiente nivel →',()=>load(stage+1))}}
+function monsterStep(){if(!$('overlay').hidden||locked||completed)return;for(const m of monsters){const dirs=[[1,0],[-1,0],[0,1],[0,-1]],choices=dirs.map(([dx,dy])=>({x:m.x+dx,y:m.y+dy})).filter(p=>floor(p.x,p.y)&&!same(p,exit)&&!(keyPos&&same(p,keyPos))&&!(mirrorPos&&same(p,mirrorPos)));if(!choices.length)continue;const preferred=choices.filter(p=>!m.previous||!same(p,m.previous));const opts=preferred.length?preferred:choices;const target=opts[Math.floor(Math.random()*opts.length)];m.previous={x:m.x,y:m.y};m.x=target.x;m.y=target.y;}checkMonsters()}
+// El jefe se mueve más rápido que los enemigos normales y persigue a Caca Fea.
+// Puede cruzar la casilla del espejo (antes quedaba encerrado). Usamos caminos para que
+// no intente atravesar paredes y un pequeño desvío aleatorio para que sorprenda.
+function bossStep(){
+ if(!boss||!$('overlay').hidden||locked||completed)return;
+ const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ const queue=[{x:player.x,y:player.y}],dist=new Map([[player.x+','+player.y,0]]);
+ for(let i=0;i<queue.length;i++){
+  const q=queue[i],d=dist.get(q.x+','+q.y);
+  for(const [dx,dy] of dirs){const x=q.x+dx,y=q.y+dy,k=x+','+y;
+   if(floor(x,y)&&!dist.has(k)){dist.set(k,d+1);queue.push({x,y});}
+  }
+ }
+ const choices=dirs.map(([dx,dy])=>({x:boss.x+dx,y:boss.y+dy}))
+   .filter(p=>floor(p.x,p.y));
+ if(!choices.length)return;
+ choices.sort((a,b)=>(dist.get(a.x+','+a.y)??999)-(dist.get(b.x+','+b.y)??999));
+ // La mayor parte del tiempo va hacia la caca; de vez en cuando cambia de rumbo.
+ const near=choices.filter(p=>(dist.get(p.x+','+p.y)??999)===(dist.get(choices[0].x+','+choices[0].y)??999));
+ let next=Math.random()<.83?near[Math.floor(Math.random()*near.length)]:choices[Math.floor(Math.random()*choices.length)];
+ boss.previous={x:boss.x,y:boss.y};boss.x=next.x;boss.y=next.y;
+ // Un jefe que entra en una burbuja también recibe el impacto.
+ const touching=shots.find(s=>!s.dead&&shotTouchesBoss(s));
+ if(touching){touching.dead=true;damageBoss(touching,performance.now());}
+ checkMonsters();
+}
+function rounded(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+function drawPoop(x,y,tile,t){const p={x:((cv.width-15*Math.min((cv.width-28)/15,(cv.height-28)/13))/2)+(x+.5)*Math.min((cv.width-28)/15,(cv.height-28)/13),y:((cv.height-13*Math.min((cv.width-28)/15,(cv.height-28)/13))/2)+(y+.5)*Math.min((cv.width-28)/15,(cv.height-28)/13)};const r=tile*.41;ctx.save();ctx.translate(p.x,p.y+Math.sin(t/190)*1.2);ctx.shadowColor='#7f6e61';ctx.shadowBlur=7;ctx.shadowOffsetY=3;ctx.fillStyle=pretty?'#bd7540':gems.length?'#86502d':'#ab673a';ctx.beginPath();ctx.moveTo(-r*.95,r*.74);ctx.bezierCurveTo(-r*1.25,r*.1,-r*.7,-r*.25,-r*.43,-r*.25);ctx.bezierCurveTo(-r*.65,-r*.55,-r*.2,-r*.75,r*.09,-r*.68);ctx.bezierCurveTo(-r*.04,-r*1.08,r*.38,-r*1.25,r*.35,-r*1.56);ctx.bezierCurveTo(r*.91,-r*1.14,r*.65,-r*.76,r*.57,-r*.59);ctx.bezierCurveTo(r*1.18,-r*.33,r*1.12,r*.2,r*.98,r*.74);ctx.quadraticCurveTo(0,r*1.1,-r*.95,r*.74);ctx.fill();ctx.shadowBlur=0;ctx.shadowOffsetY=0;if(gems.length){ctx.fillStyle='#5c372b';for(const [a,b] of [[-.7,.32],[.65,.32],[-.15,-.55]]){ctx.beginPath();ctx.arc(a*r,b*r,r*.12,0,Math.PI*2);ctx.fill()}}ctx.fillStyle='#fff';for(const q of [-.35,.36]){ctx.beginPath();ctx.ellipse(q*r,-.04*r,r*.18,r*.23,0,0,7);ctx.fill();ctx.fillStyle='#241716';ctx.beginPath();ctx.arc((q+.06)*r,-.01*r,r*.09,0,7);ctx.fill();ctx.fillStyle='#fff'}ctx.strokeStyle='#3b1a15';ctx.lineWidth=Math.max(2,tile*.045);ctx.lineCap='round';ctx.beginPath();if(pretty){ctx.arc(0,.30*r,r*.23,.06,Math.PI-.06)}else{ctx.moveTo(-r*.18,r*.35);ctx.quadraticCurveTo(0,r*.47,r*.18,r*.35)}ctx.stroke();if(hasKey){ctx.fillStyle='#2f4050';rounded(-r*.65,-r*.27,r*1.3,r*.43,r*.09);ctx.fill();ctx.fillStyle='#66dfe3';ctx.globalAlpha=.45;ctx.fillRect(-r*.48,-r*.19,r*.2,r*.055);ctx.globalAlpha=1}if(pretty){ctx.fillStyle='#ff87b7';for(const q of [-.72,.73]){ctx.beginPath();ctx.arc(q*r,.21*r,r*.13,0,7);ctx.fill()}ctx.fillStyle='#ffd86c';ctx.font=`${tile*.29}px system-ui`;ctx.fillText('✦',-r*1.18,-r*.7);ctx.fillText('✦',r*.92,-r*1.0)}ctx.restore()}
+function draw(t){animation=t;advanceShots(t);const W=cv.width,H=cv.height,C=grid[0]?.length||15,R=grid.length||13;ctx.clearRect(0,0,W,H);const tile=Math.min((W-28)/C,(H-28)/R),ox=(W-C*tile)/2,oy=(H-R*tile)/2;const center=(x,y)=>({x:ox+(x+.5)*tile,y:oy+(y+.5)*tile});ctx.fillStyle='#d8fffd';ctx.fillRect(0,0,W,H);for(let y=0;y<R;y++)for(let x=0;x<C;x++){const xx=ox+x*tile,yy=oy+y*tile;const wall=grid[y][x]==='#';if(wall){ctx.fillStyle='#89d9ee';rounded(xx+1,yy+1,tile-2,tile-2,5);ctx.fill();ctx.fillStyle='#dffdfb';rounded(xx+3,yy+2,tile-6,7,3);ctx.fill();ctx.fillStyle='#57b4cf';ctx.fillRect(xx+3,yy+tile-8,tile-6,3)}else{ctx.fillStyle=(x+y)%2===0?'#c9fffb':'#ecfffd';ctx.fillRect(xx,yy,tile,tile);ctx.fillStyle='#77d2de';ctx.globalAlpha=.14;ctx.beginPath();ctx.arc(xx+tile*.24,yy+tile*.3,1.6,0,7);ctx.fill();ctx.globalAlpha=1}}
+// La marca permanece en el suelo hasta que aparece el jefe.
+if(bossSpawn&&!pretty){
+ const p=center(bossSpawn.x,bossSpawn.y),w=tile*.94,h=tile*.94;
+ ctx.save();ctx.translate(p.x,p.y);
+ ctx.fillStyle='#ffe077';ctx.strokeStyle='#fa6296';ctx.lineWidth=Math.max(2,tile*.07);
+ rounded(-w/2,-h/2,w,h,tile*.14);ctx.fill();ctx.stroke();
+ ctx.fillStyle='#6a3758';ctx.textAlign='center';ctx.textBaseline='middle';
+ ctx.font=`900 ${tile*.43}px system-ui`;ctx.fillText('!',0,-tile*.10);
+ ctx.font=`900 ${tile*.20}px system-ui`;ctx.fillText('JEFE',0,tile*.24);
+ ctx.restore();
+}
+function symbol(str,x,y,size,shadow=true){const p=center(x,y);ctx.save();ctx.font=`${size}px system-ui,Apple Color Emoji,Segoe UI Emoji`;ctx.textAlign='center';ctx.textBaseline='middle';if(shadow){ctx.shadowColor='#b8a99b';ctx.shadowBlur=6;ctx.shadowOffsetY=3}ctx.fillText(str,p.x,p.y+1);ctx.restore()}
+const pul=Math.sin(t/270);ctx.save();const e=center(exit.x,exit.y);ctx.shadowBlur=pretty?17:5;ctx.shadowColor=pretty?'#8cebc0':'#ffb08d';ctx.fillStyle=pretty?'#59c9b0':'#ff9b73';rounded(e.x-tile*.35,e.y-tile*.37,tile*.7,tile*.74,13);ctx.fill();ctx.restore();symbol('🚽',exit.x,exit.y,tile*.7);for(const g of gems){const p=center(g.x,g.y);ctx.save();ctx.translate(0,pul*2);symbol('🧼',g.x,g.y,tile*.62);ctx.restore()}if(keyPos)symbol('🕶️',keyPos.x,keyPos.y,tile*.65);if(mirrorPos)symbol('🪞',mirrorPos.x,mirrorPos.y,tile*.65);for(const m of monsters)symbol('🧻',m.x,m.y,tile*.71);
+ if(boss){const b=center(boss.x,boss.y);ctx.save();const pulse=1+Math.sin(t/160)*.11;ctx.strokeStyle=t<boss.flash?'#ffffff':'#ff5d96';ctx.lineWidth=4;ctx.beginPath();ctx.arc(b.x,b.y,tile*.44*pulse,0,Math.PI*2);ctx.stroke();ctx.restore();symbol('🧻',boss.x,boss.y,tile*.94);ctx.fillStyle='#7b5a48';ctx.fillRect(b.x-tile*.43,b.y-tile*.63,tile*.86,7);ctx.fillStyle='#ff5d96';ctx.fillRect(b.x-tile*.43,b.y-tile*.63,tile*.86*(boss.hp/boss.maxHp),7);ctx.font=`${tile*.27}px system-ui`;ctx.textAlign='center';ctx.fillText('👑',b.x,b.y-tile*.52)}
+ for(const q of shots){const p=center(q.x,q.y);ctx.save();ctx.fillStyle='#43e7cf';ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.shadowColor='#39cbb8';ctx.shadowBlur=15;ctx.beginPath();ctx.arc(p.x,p.y,tile*.22,0,7);ctx.fill();ctx.stroke();ctx.restore()}
+ hitEffects=hitEffects.filter(q=>t-q.started<750);
+ for(const q of hitEffects){
+  const p=center(q.x,q.y),age=t-q.started,fade=1-age/750;
+  ctx.save();ctx.globalAlpha=fade;ctx.strokeStyle='#ff4b86';ctx.lineWidth=5;
+  ctx.beginPath();ctx.arc(p.x,p.y,tile*(.20+.35*age/750),0,Math.PI*2);ctx.stroke();
+  ctx.font=`900 ${tile*.47}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.lineWidth=4;ctx.strokeStyle='#fff';ctx.fillStyle='#d72c65';
+  ctx.strokeText('−1',p.x,p.y-tile*(.35+.5*age/750));
+  ctx.fillText('−1',p.x,p.y-tile*(.35+.5*age/750));
+  ctx.restore();
+ }
+if(!(t<invincibleUntil&&Math.floor(t/100)%2===0))drawPoop(player.x,player.y,tile,t);
+if(boss){
+ const p=center(player.x,player.y),[dx,dy]=facing;
+ const cx=p.x+dx*tile*.46,cy=p.y+dy*tile*.46;
+ ctx.save();ctx.translate(cx,cy);ctx.rotate(Math.atan2(dy,dx));
+ ctx.fillStyle='#ff4987';ctx.strokeStyle='#fff';ctx.lineWidth=2;
+ ctx.beginPath();ctx.moveTo(tile*.15,0);ctx.lineTo(-tile*.12,-tile*.12);ctx.lineTo(-tile*.12,tile*.12);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+}
+requestAnimationFrame(draw)}
+// Android/iOS: no mostrar el menú de texto al mantener pulsado el juego.
+for (const element of document.querySelectorAll('.game-card, .overlay')) {
+  for (const type of ['contextmenu', 'selectstart', 'dragstart']) {
+    element.addEventListener(type, event => event.preventDefault());
+  }
+}
+const direction={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};document.addEventListener('keydown',e=>{const key={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'}[e.key];if(key){e.preventDefault();move(...direction[key])}else if(e.code==='Space'){e.preventDefault();shoot()}});document.querySelectorAll('[data-dir]').forEach(b=>{let timer;b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);const d=direction[b.dataset.dir];move(...d);timer=setInterval(()=>move(...d),135)});for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>clearInterval(timer))});$('attack').onclick=shoot;$('restart').onclick=()=>load(stage);$('sound').onclick=()=>{soundOn=!soundOn;$('sound').textContent=soundOn?'🔊 Efectos: sí':'🔇 Efectos: no';$('sound').setAttribute('aria-pressed',String(soundOn))};$('music').onclick=()=>{musicOn=!musicOn;$('music').textContent=musicOn?'🎵 Música: sí':'🔕 Música: no';$('music').setAttribute('aria-pressed',String(musicOn));if(musicOn)startMusic();else stopMusic()};document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMusic();else if(musicOn)startMusic()});let sx,sy;cv.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});cv.addEventListener('touchend',e=>{if(sx===undefined)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.max(Math.abs(dx),Math.abs(dy))>18)move(...(Math.abs(dx)>Math.abs(dy)?direction[dx>0?'right':'left']:direction[dy>0?'down':'up']));sx=sy=undefined},{passive:true});setInterval(monsterStep,620);load(0);requestAnimationFrame(draw);$('overlayButton').onclick=()=>{$('overlay').hidden=true;startMusic()};
+})();
+</script>
+</body>
+</html>
