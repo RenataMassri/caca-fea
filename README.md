@@ -32,29 +32,6 @@ En esta aventura, **Caca Fea** quiere dejar de estar mugrienta, ponerse unos ant
 - **Diseño colorido de baño-cartoon**, con azulejos turquesas, controles táctiles y efectos cómicos.
 - Funciona en **computadoras y celulares**, directamente desde el navegador.
 
-## 🚀 Jugar en línea
-
-Si el juego está publicado en GitHub Pages, podés abrirlo en:
-
-`https://TU-USUARIO.github.io/TU-REPOSITORIO/`
-
-> Reemplazá `TU-USUARIO` y `TU-REPOSITORIO` por los datos del repositorio.
-
-## 🛠️ Ejecutar o publicar
-
-El juego está hecho con **HTML, CSS y JavaScript**, sin dependencias externas. Todo está incluido en un único archivo.
-
-**Para jugar localmente:** abrí `index.html` en un navegador.
-
-**Para publicarlo en GitHub Pages:**
-
-1. Subí `index.html` y este `README.md` a la raíz del repositorio.
-2. En GitHub, entrá en **Settings → Pages**.
-3. Elegí **Deploy from a branch**, la rama `main` y la carpeta `/ (root)`.
-4. Guardá la configuración y abrí la dirección que te indique GitHub Pages una vez publicada.
-
-Si descargaste una versión con nombre como `caca_fea_v5.html`, **renombrala a `index.html`** antes de subirla.
-
 ## 🧡 Sobre el proyecto
 
 Un juego familiar creado para divertirse, explorar laberintos y enfrentar al temible ejército del papel higiénico.
