@@ -14,6 +14,8 @@ En esta aventura, **Caca Fea** quiere dejar de estar mugrienta, ponerse unos ant
 
 ¡Cuidado! Los rollos de papel higiénico que recorren el laberinto pueden sacarte vidas.
 
+🎮 [¡Jugar a La Caca Fea y el Gran Inodoro!](https://renatamassri.github.io/caca-fea/)
+
 ## 🕹️ Controles
 
 | Acción | Computadora | Celular |
